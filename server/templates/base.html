@@ -24,7 +24,7 @@
                         <li class="nav-item my-nav-item"><a class="nav-link" href="#">Sinov</a></li>
                         <li class="nav-item my-nav-item"><a class="nav-link" href="#">Ko'rib chiqish</a></li>
                         <li class="nav-item my-nav-item"><a class="nav-link" href="#">So'zlar</a></li>
-                        <li class="nav-item my-nav-item"><a class="nav-link" href="#">Hisob</a></li>
+                        <li class="nav-item my-nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Chiqish</a></li>
                     {% else %}
                         <li class="nav-item my-nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Kirish</a></li>
                         <li class="nav-item my-nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}">Ro‘yxatdan o‘tish</a></li>

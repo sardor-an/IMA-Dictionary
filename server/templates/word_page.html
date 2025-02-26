@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="main_word_page">
+    <h2 class="searched_word">{{ word }}</h2>
+    <span class="pronounce">US: {{ phonetics[0] }}</span>
+    <span class="pronounce">UK: {{ phonetics[1] }}</span>
+    <hr>
+    <div class="definitions">
+        <ul class=>
+            {% for item in definitions %}
+            <li class="">{{ item }}</li>
+            {% endfor %}
+            
+          </ul>          
+    </div>
+</div>
+
+{% endblock %}

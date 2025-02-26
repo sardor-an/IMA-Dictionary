@@ -5,6 +5,20 @@
     margin-right: 10px;
 }
 
+.searched_word {
+    color: #1d2a57;
+    font-weight: 400;
+    font-size: 36px;
+}
+
+.pronounce {
+    margin-right: 10px;
+}
+.main_word_page {
+    width: 80%;
+    margin-left: 10%;
+    height: 100vh;
+}
 
 /* BASE PAGE */
 body {

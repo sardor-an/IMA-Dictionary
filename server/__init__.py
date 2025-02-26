@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, render_template, request, g
+from flask import Flask, render_template, request, g, redirect, url_for
 from .tools import home_page_quote, translate
 
 def create_app():
@@ -22,8 +22,10 @@ def create_app():
 
     from . import db
     from .auth import auth
+    from .word import word
 
     app.register_blueprint(auth)
+    app.register_blueprint(word)
 
 
 
@@ -37,8 +39,11 @@ def create_app():
         g.translate = translate
         
         if request.method == "POST":
-            searched_word = request.form["searched_word"]
-            print(searched_word)
+            searched_word = request.form.get("searched_word")
+            return redirect(url_for('word.search_word', word=searched_word))
+
+
+
         return render_template('home.html')
 
     return app
