@@ -11,8 +11,8 @@ def create_app():
         DATABASE=os.path.join(app.instance_path, 'server.sqlite'),
     )
 
-    
-
+    from . import db
+    db.init_app(app)
     # ensure the instance folder exists
     try:
         os.makedirs(app.instance_path)
@@ -20,17 +20,14 @@ def create_app():
         pass
 
 
-    from . import db
+    
     from .auth import auth
     from .word import word
 
     app.register_blueprint(auth)
     app.register_blueprint(word)
 
-
-
-
-    db.init_app(app)
+    
 
     # home page
     @app.route('/', methods = ['GET', 'POST'])
@@ -41,8 +38,6 @@ def create_app():
         if request.method == "POST":
             searched_word = request.form.get("searched_word")
             return redirect(url_for('word.search_word', word=searched_word))
-
-
 
         return render_template('home.html')
 

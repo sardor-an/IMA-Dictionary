@@ -7,7 +7,7 @@
                 <form method="post">
                 {% if g.user %}
                 <h2 class="fw-bold mb-4">Hey {{ g.user['first_name'] }}, bugun yangi bilimlarni kashf etishga tayyormisan?</h2>
-                <p class="lead text-muted mb-4">{{ g.translate(g.home_page_quote(), 'en', 'uz') }}</p>
+                <p class="lead text-muted mb-4">{{ g.translate(g.home_page_quote()) }}</p>
                 {% else %}
                 <h2 class="fw-bold mb-4">Xush kelibsiz, kerakli so'zni qidiring</h2>
                 {% endif %}
