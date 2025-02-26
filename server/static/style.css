@@ -1,0 +1,107 @@
+/* SITE STYLES */
+.my-nav-item {
+    padding: 5px;
+    font-weight: 500;
+    margin-right: 10px;
+}
+
+
+/* BASE PAGE */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+footer {
+    background-color: #f8f9fa;
+    padding: 20px 0;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-content a {
+    margin-left: 10px;
+}
+
+.footer {
+    background-color: #1d2a57;    
+    color: white;
+}
+
+
+/* HOME PAGE */
+
+
+/* LOGIN PAGE */
+.login-container {
+    max-width: 400px;
+    margin: auto;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-form .form-control {
+    border-radius: 8px;
+}
+
+.login-button {
+    background-color: #1d2a57 !important;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease-in-out;
+}
+
+.login-button:hover {
+    background-color: #162144 !important;
+}
+
+@media (max-width: 768px) {
+    .login-container {
+        padding: 30px;
+    }
+}
+
+/* REGISTER PAGE */
+.register-container {
+    max-width: 400px;
+    margin: auto;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.register-form .form-control {
+    border-radius: 8px;
+}
+
+.register-button {
+    background-color: #1d2a57 !important;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease-in-out;
+}
+
+
+@media (max-width: 768px) {
+    .register-container {
+        padding: 30px;
+    }
+}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="login-container mt-5 p-5 mb-5">
+    <h2 class="text-center mb-4">Login</h2>
+    <form class="login-form" method="post">
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" id="email" placeholder="Email" name="email">
+            <label for="email">Email</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control" id="password" placeholder="Password" name="password">
+            <label for="password">Password</label>
+        </div>
+
+        <button type="submit" class="btn w-100 login-button text-white">Login</button>
+    </form>
+    <div class="text-center mt-3">
+        <p>Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-primary">Register here</a></p>
+    </div>
+</div>
+{% endblock %}
