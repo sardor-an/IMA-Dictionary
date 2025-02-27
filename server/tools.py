@@ -76,8 +76,8 @@ def get_aip_response(user_message):
         - Your response must look exactly like this JSON structure. Do NOT add extra fields or remove any
         - No extra explanations. Only output the JSON structure.
         - You MUST strictly follow the JSON pattern below. Do NOT modify the structure, order, or format of the response.
-        - There should be at least 5 examples in each section (at least 5 definitions, at least 5 synonyms, and so on for all.But only examples must be more than 15 in many different cases)
-        - REMEMBER I said at least 5, I didn't always say 5, it's okay if there are more.
+        - There should be at least 5 examples in each section (at least 5 definitions, at least 5 synonyms, and so on for all.But only examples always must be 20  in many different cases)
+        - REMEMBER I said at least 5, I didn't always say 5, it's okay if there are more.And their max is 10;
         - Take examples from real situations and make sure they are understandable.
         So let's start!
         Given word: {user_message}
@@ -151,6 +151,53 @@ def search_unsplash(text, per_page=10):
     else:
         return f"Error: {response.status_code}, {response.json()}"
 
+def get_the_word(word_id):
+    return get_db().execute('SELECT * FROM Word WHERE id = ?', (word_id, )).fetchone()
+def get_definitions(word_id):
+    return get_db().execute('SELECT * FROM Definition WHERE word_id = ?', (word_id, )).fetchall()
+
+def get_definitions_uz(word_id):
+    return get_db().execute('SELECT * FROM Definition_uz WHERE word_id = ?', (word_id, )).fetchall()
+
+def get_synonyms(word_id):
+    return get_db().execute('SELECT * FROM Synonym WHERE word_id = ?', (word_id, )).fetchall()
 
 
+def get_antonyms(word_id):
+    return get_db().execute('SELECT * FROM Antonym WHERE word_id = ?', (word_id, )).fetchall()
 
+def get_paronyms(word_id):
+    return get_db().execute('SELECT * FROM Paronyms WHERE word_id = ?', (word_id, )).fetchall()
+
+def get_examples(word_id):
+    return get_db().execute('SELECT * FROM Example WHERE word_id = ?', (word_id, )).fetchall()
+
+def get_phonetics(word_id):
+    return get_db().execute('SELECT * FROM Phonetics WHERE word_id = ?', (word_id, )).fetchall()
+
+
+import re
+def extract_data_1(text):
+    pattern = r"```html\s*(.*?)\s*```"
+
+    match = re.search(pattern, text, re.DOTALL)  # Search for the pattern
+    if match:
+        return match.group(1).strip()  # Return extracted data without extra spaces
+    return None  # Return None if no match is found
+
+def get_audio_url(word):
+    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+
+        if isinstance(data, list) and "phonetics" in data[0]:
+            for phonetic in data[0]["phonetics"]:
+                if "audio" in phonetic and phonetic["audio"]:
+                    return phonetic["audio"]
+
+        return "No pronunciation audio found."
+
+    except requests.exceptions.RequestException as e:
+        return f"Error fetching data: {e}"

@@ -29,6 +29,9 @@
                                             </li>
                                             {% if wordlist['title'].lower() != 'history' %}
                                             <li>
+                                                <a class="dropdown-item" href="{{ url_for('word.print', wordlist_id=wordlist['id']) }}">Print</a>
+                                            </li>
+                                            <li>
                                                 <a class="dropdown-item text-danger" href="{{ url_for('word.delete_wordlist', id=wordlist['id']) }}">Delete</a>
                                             </li>
                                             {% endif %}

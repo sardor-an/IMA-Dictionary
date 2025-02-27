@@ -20,9 +20,6 @@
                 <ul class="navbar-nav ms-auto">
                     {% if g.user %}
                         <li class="nav-item my-nav-item"><a class="nav-link" href="{{ url_for('word.wordlist_view', id=g.history_wordlist['id']) }}">History</a></li>
-                        <li class="nav-item my-nav-item"><a class="nav-link" href="#">Print</a></li>
-                        <li class="nav-item my-nav-item"><a class="nav-link" href="#">Test</a></li>
-                        <li class="nav-item my-nav-item"><a class="nav-link" href="#">Review</a></li>
                         <li class="nav-item my-nav-item"><a class="nav-link" href="{{ url_for('word.my_wordlists') }}">Wordlist</a></li>
                         <li class="nav-item my-nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
                     {% else %}

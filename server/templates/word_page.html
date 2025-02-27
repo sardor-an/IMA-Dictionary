@@ -1,80 +1,118 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="main_word_page">
-    <h2 class="searched_word">{{ word }} - {{word_details['uzbek_translation']}}</h2>
-    <span class="pronounce">US: {{ word_details['phonetics'][0] }}</span>
-    <span class="pronounce">UK: {{ word_details['phonetics'][1] }}</span>
-    <hr>
-    <div class="definitions">
-        <img src="{{ image[0][0] }}" alt="Description of the image" style="width: 300px; height: 200px; object-fit: cover; border-radius: 10px;">
-        <p>{{ image[0][1] }}</p>
-
-
-       <div class="row">
-        <div class="col col-6">
-            <h3>Definitions</h3>
-            <ul>
-                {% for item in word_details['definitions'] %}
-                    <li class="">{{ item }}</li>
-                {% endfor %}
-              </ul>
+<div class="main_word_page container py-4">
+    <div class="row g-4">
+        <div class="col-12 col-md-6">
+            <div class="row g-3">
+                <div class="col-12">
+                    <h2 class="searched_word mb-0">{{ word }} - {{ word_details['uzbek_translation'] }}</h2>
+                </div>
+                <div class="col-12">
+                    <div class="row align-items-center g-2">
+                        <div class="col-12 col-sm-6">
+                            <audio controls class="w-100">
+                                <source src="{{ audio_url }}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle w-100" type="button" id="wordlistDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    +
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="wordlistDropdown">
+                                    {% for wordlist in wordlists %}
+                                        {% if wordlist['title'].lower() != "history" %}
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('word.add_to_wordlist', wordlist_id=wordlist['id'], word_id=word_id) }}">
+                                                {{ wordlist['title'] }}
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-         
-        <div class="col col-6">
-            <h3>Translated definitions</h3> 
-              <ul>
-                {% for item in word_details['definitions_uz'] %}
-                    <li class="">{{ item }}</li>
-                {% endfor %}
-              </ul>     
+        <div class="col-12 col-md-6">
+            <img src="{{ image[0][0] }}" alt="Description of the image" class="img-fluid rounded" style="max-height: 200px;">
+            <p class="mt-2">{{ image[0][1] }}</p>
         </div>
-       </div>       
     </div>
-    <div class="row">
-        <div class="col col-4 col-sm-2">
+
+    <div class="my-3">
+        <span class="pronounce d-block">US: {{ word_details['phonetics'][0] }}</span>
+        <span class="pronounce d-block">UK: {{ word_details['phonetics'][1] }}</span>
+    </div>
+
+    <hr>
+
+    <div class="definitions">
+        <div class="row g-4">
+            <div class="col-12 col-md-6">
+                <h3>Definitions</h3>
+                <ul class="list-unstyled">
+                    {% for item in word_details['definitions'] %}
+                        <li class="mb-2">{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-12 col-md-6">
+                <h3>Translated definitions</h3>
+                <ul class="list-unstyled">
+                    {% for item in word_details['definitions_uz'] %}
+                        <li class="mb-2">{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-3">
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
             <div class="synonyms">
                 <h3>Synonyms</h3>
-                <ul class=>
+                <ul class="list-unstyled">
                     {% for item in word_details['synonyms'] %}
-                    <li class=""><a href="{{ url_for('word.search_word', word=item) }}">{{ item }}</a></li> 
+                        <li class="mb-2"><a href="{{ url_for('word.search_word', word=item) }}">{{ item }}</a></li>
                     {% endfor %}
-                  </ul>  
+                </ul>
             </div>
         </div>
-        <div class="col col-4 col-sm-2">
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
             <div class="antonyms">
                 <h3>Antonyms</h3>
-                <ul class=>
+                <ul class="list-unstyled">
                     {% for item in word_details['antonyms'] %}
-                        <li class=""><a href="{{ url_for('word.search_word', word=item) }}">{{ item }}</a></li> 
+                        <li class="mb-2"><a href="{{ url_for('word.search_word', word=item) }}">{{ item }}</a></li>
                     {% endfor %}
-                  </ul>  
+                </ul>
             </div>
         </div>
-        <div class="col col-4 col-sm-2">
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
             <div class="paronyms">
                 <h3>Paronyms</h3>
-                <ul class=>
+                <ul class="list-unstyled">
                     {% for item in word_details['paronyms'] %}
-                        <li class=""><a href="{{ url_for('word.search_word', word=item) }}">{{ item }}</a></li> 
+                        <li class="mb-2"><a href="{{ url_for('word.search_word', word=item) }}">{{ item }}</a></li>
                     {% endfor %}
-                  </ul>  
+                </ul>
             </div>
         </div>
-        <div class="col col-12 col-sm-6 ">
+        <div class="col-12 col-sm-6 col-md-12 col-lg-6">
             <div class="examples">
                 <h3>Examples</h3>
-                <ul class=>
+                <ul class="list-unstyled">
                     {% for item in word_details['examples'] %}
-                        <li class="">{{ item }}</li>
+                        <li class="mb-2">{{ item }}</li>
                     {% endfor %}
-                  </ul>  
+                </ul>
             </div>
         </div>
     </div>
-    
-    
 </div>
-
 {% endblock %}

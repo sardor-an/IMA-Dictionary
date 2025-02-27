@@ -1,4 +1,45 @@
 /* SITE STYLES */
+.defs {
+    margin-bottom: 15px;
+
+}
+
+.phonetic {
+    margin-left: 0;
+    padding-left: 0;
+    margin-right: 10px;
+    font-size: 15px;
+}
+.word-title {
+    font-size: 1.5rem; /* Larger font size for emphasis */
+    font-weight: 700; /* Bold */
+    color: #2c3e50; /* Dark blue shade for contrast */
+}
+
+.word-translation {
+    font-size: 1rem; /* Slightly smaller for differentiation */
+    font-weight: 600;
+    color: #e67e22; /* Warm orange for visibility */
+}
+
+.title-separator {
+    border: none;
+    height: 2px;
+    background: linear-gradient(to right, #e67e22, #2c3e50); /* Gradient effect */
+    /* width: 60%; */
+    margin: 10px 0;
+}
+
+
+
+.definition-text {
+    font-size: 1.0rem;
+    font-style: italic;
+    color: #34495e; /* Soft dark gray */
+    padding-left: 10px; /* Indentation */
+
+}
+
 .color {
     background-color: #1d2a57 !important;
 }

@@ -77,3 +77,26 @@ prm = """
 
 """
 
+import re
+def extract_data_1(text):
+    pattern = r"```html\s*(.*?)\s*```"
+
+    match = re.search(pattern, text, re.DOTALL)  # Search for the pattern
+    if match:
+        return match.group(1).strip()  # Return extracted data without extra spaces
+    return None  # Return None if no match is found
+
+print(extract_data_1("""```html
+A Greeting Through Art
+Once upon a time, there was an artist who wanted to create an _____________. She
+wanted it to be special, a piece that truly expressed her feelings. As she began to
+sketch, she thought about how to start. Then, an idea struck her: why not make a
+greeting in the form of art? She began to draw a friendly character, waving its
+hand. The character seemed to say _____________. It was the perfect way to start her
+artistic greeting! The artist smiled, proud of her creative way to say "Hi."
+Testing
+A visual representation or depiction, often used to clarify or enhance
+understanding.
+A) Demonstration B) Greeting C) Ilustration D) Conversation
+A word used as a greeting or to begin a conversation.
+A) Goodbye B) Hello C) Farewell D) Adieu ```"""))

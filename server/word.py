@@ -6,81 +6,82 @@ from flask import (
 from werkzeug import exceptions
 
 from server.db import get_db
-from server.tools import get_aip_response,  check_if_word_exists, string_make_for_list, str_json
+from server.tools import get_aip_response,  check_if_word_exists, string_make_for_list, str_json, search_unsplash, get_gemini_response, get_audio_url
+from server.tools import get_examples
+from flask import Flask, render_template, make_response
+from weasyprint import HTML
 
 word = Blueprint('word', __name__, url_prefix='/word')
 
 @word.route('/search/<word>')
 def search_word(word):
-        from flask import jsonify
-        db = get_db()
-        new_word = get_aip_response(word)
+    db = get_db()
     
-    # if check_if_word_exists(word):  # Global check if the word exists
-        word_check = db.execute('SELECT * FROM Word WHERE word = ?', (word,)).fetchone()  # Local check in our database
-        if not word_check:
-            # Fetch word data from AI
-            
-#             # ADDING NEW WORD 
-            db.execute('INSERT INTO Word (word, uzbek_translation) VALUES (?, ?)', (word, new_word['uzbek_translation']))
+    # Check if word exists in our database
+    word_check = db.execute('SELECT * FROM Word WHERE word = ?', (word,)).fetchone()
+    
+    if not word_check:
+        # Fetch word data from AI API
+        new_word = get_aip_response(word)
+        if not new_word:  # Handle API failure
+            return jsonify({'error': 'Word not found in API'}), 404
 
-            # get word that has just been added
-            new_added_word = db.execute('SELECT * FROM Word WHERE word = ?', (word, )).fetchone()
-            
+        # Insert new word
+        db.execute('INSERT INTO Word (word, uzbek_translation) VALUES (?, ?)', 
+                   (word, new_word['uzbek_translation']))
+        
+        # Retrieve newly inserted word ID
+        new_word_id = db.execute('SELECT id FROM Word WHERE word = ?', (word,)).fetchone()['id']
 
-            for defintion in new_word['definitions']:
-                db.execute('INSERT INTO Definition (word_id, definition) VALUES (?, ?)', (new_added_word['id'], defintion))
-            
-            for defintion_uz in new_word['definitions_uz']:
-                db.execute('INSERT INTO Definition_uz (word_id, definition) VALUES (?, ?)', (new_added_word['id'], defintion_uz))
+        # Bulk Insert
+        def bulk_insert(table, column, values):
+            if values:
+                db.executemany(f'INSERT INTO {table} (word_id, {column}) VALUES (?, ?)', 
+                               [(new_word_id, v) for v in values])
 
-            for synonym in new_word['synonyms']:
-                db.execute('INSERT INTO Synonym (word_id, synonym) VALUES (?, ?)', (new_added_word['id'], synonym))
+        bulk_insert('Definition', 'definition', new_word['definitions'])
+        bulk_insert('Definition_uz', 'definition', new_word['definitions_uz'])
+        bulk_insert('Synonym', 'synonym', new_word['synonyms'])
+        bulk_insert('Antonym', 'antonym', new_word['antonyms'])
+        bulk_insert('Paronyms', 'paronym', new_word['paronyms'])
+        bulk_insert('Phonetics', 'phonetic', new_word['phonetics'])
 
-            for antonym in new_word['antonyms']:
-                db.execute('INSERT INTO Antonym (word_id, antonym) VALUES (?, ?)', (new_added_word['id'], antonym))
-            
-            for example in new_word['examples']:
-                db.execute('INSERT INTO Example (word_id, example, word_class) VALUES (?, ?, ?)', (new_added_word['id'], example['sentence'], example['word_class']))
-            
-            for phonetic in new_word['phonetics']:
-                db.execute('INSERT INTO Phonetics (word_id, phonetic) VALUES (?, ?)', (new_added_word['id'], phonetic))
+        # Insert examples with word class
+        if new_word['examples']:
+            db.executemany('INSERT INTO Example (word_id, example, word_class) VALUES (?, ?, ?)', 
+                           [(new_word_id, ex['sentence'], ex['word_class']) for ex in new_word['examples']])
 
-            for paronym in new_word['paronyms']:
-                db.execute('INSERT INTO Example (word_id, paronym) VALUES (?, ?)', (new_added_word['id'], paronym))
-            
+        db.commit()
 
+        word_check = {'id': new_word_id, 'uzbek_translation': new_word['uzbek_translation']}
 
+    # Retrieve word details
+    word_id = word_check['id']
+    word_details = {
+        'paronyms': [row[0] for row in db.execute('SELECT paronym FROM Paronyms WHERE word_id = ?', (word_id,)).fetchall()],
+        'definitions': [row[0] for row in db.execute('SELECT definition FROM Definition WHERE word_id = ?', (word_id,)).fetchall()],
+        'synonyms': [row[0] for row in db.execute('SELECT synonym FROM Synonym WHERE word_id = ?', (word_id,)).fetchall()],
+        'antonyms': [row[0] for row in db.execute('SELECT antonym FROM Antonym WHERE word_id = ?', (word_id,)).fetchall()],
+        'examples': [row[0] for row in db.execute('SELECT example FROM Example WHERE word_id = ?', (word_id,)).fetchall()],
+        'phonetics': [row[0] for row in db.execute('SELECT phonetic FROM Phonetics WHERE word_id = ?', (word_id,)).fetchall()],
+        'definitions_uz': [row[0] for row in db.execute('SELECT definition FROM Definition_uz WHERE word_id = ?', (word_id,)).fetchall()],
+        'uzbek_translation': word_check['uzbek_translation']
+    }
+
+    # Add word to history wordlist if available
+    if g.history_wordlist:
+        if not db.execute('SELECT * FROM wordlist_word WHERE word_id = ? AND wordlist_id = ?', 
+                          (word_id, g.history_wordlist['id'])).fetchone():
+            db.execute('INSERT INTO wordlist_word (word_id, wordlist_id) VALUES (?, ?)', 
+                       (word_id, g.history_wordlist['id']))
             db.commit()
 
-        # Retrieve and return word details
-        nothing = db.execute('SELECT * FROM Word WHERE word = ?', (word, )).fetchone()
-        word_details = {
-    'paronyms': [row[0] for row in db.execute('SELECT paronym FROM Paronyms WHERE word_id = ?', (nothing['id'],)).fetchall()],
-    'definitions': [row[0] for row in db.execute('SELECT definition FROM Definition WHERE word_id = ?', (nothing['id'],)).fetchall()],
-    'synonyms': [row[0] for row in db.execute('SELECT synonym FROM Synonym WHERE word_id = ?', (nothing['id'],)).fetchall()],
-    'antonyms': [row[0] for row in db.execute('SELECT antonym FROM Antonym WHERE word_id = ?', (nothing['id'],)).fetchall()],
-    'examples': [row[0] for row in db.execute('SELECT example FROM Example WHERE word_id = ?', (nothing['id'],)).fetchall()],
-    'phonetics': [row[0] for row in db.execute('SELECT phonetic FROM Phonetics WHERE word_id = ?', (nothing['id'],)).fetchall()],
-    'definitions_uz': [row[0] for row in db.execute('SELECT definition FROM Definition_uz WHERE word_id = ?', (nothing['id'],)).fetchall()],
-    'uzbek_translation':nothing['uzbek_translation']
-}
-        print(word_details)
-        
-        if g.history_wordlist:
-            if not db.execute('SELECT * FROM wordlist_word WHERE word_id = ? AND wordlist_id = ?', (nothing['id'], g.history_wordlist['id'])).fetchone():
-                db.execute('INSERT INTO wordlist_word (word_id, wordlist_id) VALUES (?, ?)', (nothing['id'], g.history_wordlist['id']))
-                db.commit()
-        # print(word_details)
-        # return {'fuck':word_details}
 
-        from .tools import search_unsplash
+    user_wordlists = get_db().execute('SELECT * FROM Wordlist WHERE owner_id = ?', (session.get('user_id'),)).fetchall()
+    
+    # Render the word page
+    return render_template('word_page.html', word=word,word_id = word_id, word_details=word_details, image=search_unsplash(word), wordlists = user_wordlists, get_examples = get_examples, audio_url = get_audio_url(word))
 
-
-        return render_template('word_page.html', word = word, word_details = word_details, image = search_unsplash(word))
-        # return new_word
-    # else:
-    #     return {'code':get_suggests(word)}
 
 
 
@@ -160,3 +161,104 @@ def delete_wordlist(id):
             return redirect(url_for('word.my_wordlists'))
         else:
             return jsonify({"success": False, "message": "Wordlist not found."}), 404
+
+@word.route('/add_to_wordlist/<int:wordlist_id>/<int:word_id>')
+def add_to_wordlist(wordlist_id, word_id):
+    db = get_db()
+
+    # Check if the wordlist exists
+    wordlist = db.execute('SELECT * FROM Wordlist WHERE id = ?', (wordlist_id,)).fetchone()
+    if not wordlist:
+        return jsonify({"success": False, "message": "Wordlist not found."}), 404
+
+    # Check if the word exists
+    word = db.execute('SELECT * FROM Word WHERE id = ?', (word_id,)).fetchone()
+    if not word:
+        return jsonify({"success": False, "message": "Word not found."}), 404
+
+    # Check if the word is already in the wordlist
+    existing_entry = db.execute(
+        'SELECT * FROM wordlist_word WHERE wordlist_id = ? AND word_id = ?', 
+        (wordlist_id, word_id)
+    ).fetchone()
+
+    if existing_entry:
+        return jsonify({"success": False, "message": "Word already exists in the wordlist."}), 400
+
+    # Add the word to the wordlist
+    db.execute('INSERT INTO wordlist_word (wordlist_id, word_id) VALUES (?, ?)', (wordlist_id, word_id))
+    db.commit()
+
+    return redirect(url_for('word.search_word', word = word['word']))
+
+
+@word.route('/print/<int:wordlist_id>')
+def print(wordlist_id):
+    
+    db = get_db()
+    if db.execute('SELECT * FROM Wordlist WHERE id = ?', (wordlist_id,)).fetchone()['owner_id'] == session.get('user_id'):
+        # wordlist = db.execute('SELECT * FROM Wordlist WHERE id = ?', (id,)).fetchone()
+        word_ids = db.execute('SELECT * FROM wordlist_word WHERE wordlist_id = ?', (wordlist_id, )).fetchall()
+        items = []
+        for item in word_ids:
+            test = db.execute('SELECT * FROM Word WHERE id = ? ', (item['word_id'], )).fetchone()
+            if test:
+                items.append(test['word'])
+    prm = f"""I will give you my dictionaries in the form of a python list and you will write a special worksheet for your English teacher.
+1. You will write a story using all the dictionaries I gave you
+WARNING: ALL WORDS MUST BE PARTICIPATED.
+2. THE MOST INTERESTING POINT: FROM THE WORDS THAT ARE COMBINED IN YOUR STORY, YOU WILL LEAVE A BLANK SPACE (SUCH AS ____________) IN PLACE OF THE VOCABULARY WORDS I GAVE YOU, THIS IS A HOMEWORK FOR MY STUDENTS.
+3. Test part. You will write the definitions of the dictionaries I gave you. My students will look for the one that matches the definition from 4 options.
+4.MOST IMPORTANT: YOUR ANSWER MUST BE BASED ON THE PATTERN I GAVE, SO I CAN EASILY EXTRACT IT (BECAUSE I WROTE A SCRIPT TO AUTOMATE IT)
+The pattern you need to follow is:
+```html <h2>Story Title</h2>
+<hr>
+<p>Text here</p>
+
+<!-- Adding spacing using CSS instead of multiple <br> tags -->
+<div style="margin-bottom: 20px;"></div>
+
+<h2>Testing</h2>
+<!-- Using <ul> for a structured list of questions -->
+<section>
+    <article>
+        <h5>Definition 1</h5>
+        <ul>
+            <li>A) Variant 1</li>
+            <li>B) Variant 2</li>
+            <li>C) Variant 3</li>
+        </ul>
+    </article>
+
+    <article>
+        <h5>Definition 2</h5>
+        <ul>
+            <li>A) Variant 1</li>
+            <li>B) Variant 2</li>
+            <li>C) Variant 3</li>
+        </ul>
+    </article>
+
+    <article>
+        <h5>Definition 3</h5>
+        <ul>
+            <li>A) Variant 1</li>
+            <li>B) Option 2</li>
+            <li>C) Option 3</li>
+        </ul>
+    </article>
+</section>
+
+```
+You need to write the html as I show you so that I can print it in weasyprint(python library)
+LETS START! my list is: {items}
+""" 
+    from .tools import extract_data_1 as ex
+    html_content = ex(get_gemini_response(prm))
+    pdf = HTML(string=html_content).write_pdf()
+
+    # Return the PDF as a response
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'inline; filename=worksheet.pdf'
+    return response
