@@ -74,6 +74,7 @@ def login():
 
         # Successful login
         session["user_id"] = user["id"]
+        g.history_wordlist = get_db().execute("SELECT * FROM Wordlist WHERE owner_id = ? AND title = ?", (session.get('user_id',), 'History')).fetchone()
         print("SUCCESS: Login successful! Welcome back.")  # Print success message
         return redirect(url_for("home"))  # Redirect to dashboard/home page
 
@@ -86,7 +87,8 @@ def load_logged_in_user():
     user_id = session.get('user_id')
 
     if user_id is None:
-        g.user = None
+      g.user = None  
+      g.history_wordlist = None
     else:
         g.user = get_db().execute(
             'SELECT * FROM user WHERE id = ?', (user_id,)

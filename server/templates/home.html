@@ -7,11 +7,11 @@
                 <form method="post">
                 {% if g.user %}
                 <h2 class="fw-bold mb-4">Hey {{ g.user['first_name'] }}, are you ready to discover new knowledge today?</h2>
-                <p class="lead text-muted mb-4">{{ g.home_page_quote() }}</p>
+                
                 {% else %}
-                <h2 class="fw-bold mb-4">Try to find any words</h2>
+                <h2 class="fw-bold mb-4">A new word is a new world. Start exploring!</h2>
                 {% endif %}
-              
+                <p class="lead text-muted mb-4">{{ g.home_page_quote() }}</p>
                     <div class="input-group mb-3">
                     <input type="text" class="form-control" placeholder="find a word ..." name="searched_word">
                     <button class="btn text-white" type="button" style="background-color:#1d2a57;">Search</button>

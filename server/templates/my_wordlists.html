@@ -24,9 +24,14 @@
                                             Options
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="{{ url_for('word.wordlist_view', id=wordlist['id']) }}">View</a></li>
-                                            <li><a class="dropdown-item" href="#">Edit</a></li>
-                                            <li><a class="dropdown-item text-danger" href="#">Delete</a></li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('word.wordlist_view', id=wordlist['id']) }}">View</a>
+                                            </li>
+                                            {% if wordlist['title'].lower() != 'history' %}
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="{{ url_for('word.delete_wordlist', id=wordlist['id']) }}">Delete</a>
+                                            </li>
+                                            {% endif %}
                                         </ul>
                                     </div>
                                 </li>

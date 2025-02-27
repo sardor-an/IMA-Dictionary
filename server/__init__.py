@@ -32,7 +32,7 @@ def create_app():
 
     # home page
     @app.route('/', methods = ['GET', 'POST'])
-    @login_required
+    # @login_required
     def home():
         g.home_page_quote = home_page_quote
         g.translate = translate

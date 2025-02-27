@@ -38,10 +38,12 @@ def extract_data(response_text):
     try:
         data = json.loads(json_block)  # Securely parse JSON
         return {
+            "uzbek_translation":data.get('uzbek_translation', []),
             "definitions": data.get("definitions", []),
             "definitions_uz":data.get('definitions_uz', []),
             "synonyms": data.get("synonyms", []),
             "antonyms": data.get("antonyms", []),
+            'paronyms': data['paronyms'],
             "phonetics": data.get("phonetics", []),
             "examples": data.get("examples", [])
         }
@@ -50,14 +52,16 @@ def extract_data(response_text):
 
 def get_aip_response(user_message):
     prm = f"""
-        I will give you 1 English word and you will give me its definition, translation of definitions to uzbek, synonyms, antonyms, phonetic (us and uk) and real example sentences to understand and use the word. Just use the pattern I gave so that I can easily extract them from your answer
+        I will give you 1 English word and you will give me its translation of this word in uzbek,definition, translation of definitions to uzbek, synonyms, antonyms,paronyms, phonetic (us and uk) and real example sentences to understand and use the word. Just use the pattern I gave so that I can easily extract them from your answer
         You write the part of the answer I need in this pattern:
         ```json
         {{
+            "uzbek_translation:'uzbek translations here',
             "definitions": ["definition1", "definition2", "definition3"],
             "definitions_uz": ["definition_uz1", "definition_uz2", "definition_uz3"],
             "synonyms": ["synonym1", "synonym2", "synonym3"],
             "antonyms": ["antonym1", "antonym2", "antonym3"],
+            "paronyms": ["paronym1", "paronym2", "paronym3"],
             "phonetics": ["phonetic of US", "phonetic of UK"],
             "examples": [
                 {{"sentence": "Example sentence 1", "word_class": "noun"}},
@@ -105,16 +109,16 @@ def check_if_word_exists(word):
     db = get_db().execute("SELECT EXISTS(SELECT 1 FROM Saved_word WHERE word = ?)", (word,)).fetchone()[0]
     return bool(db)
 
-def get_suggests(word):
-    from rapidfuzz import process
-    def suggest_similar(word, num_suggestions=5):
-        db = get_db()
-        cursor = db.execute("SELECT word FROM Saved_Word")
-        all_words = [row[0] for row in cursor.fetchall()]
-        matches = process.extract(word, all_words, limit=num_suggestions, score_cutoff=80)
-        return [match[0] for match in matches] or "Nothing"
+# def get_suggests(word):
+#     # from rapidfuzz import process
+#     def suggest_similar(word, num_suggestions=5):
+#         db = get_db()
+#         cursor = db.execute("SELECT word FROM Saved_Word")
+#         all_words = [row[0] for row in cursor.fetchall()]
+#         matches = process.extract(word, all_words, limit=num_suggestions, score_cutoff=80)
+#         return [match[0] for match in matches] or "Nothing"
 
-    return suggest_similar(word, 10)
+#     return suggest_similar(word, 10)
 API_KEY = "AIzaSyBEAU0Np4eVQwyy_HV08gerXQ7slfKKKzw"
 def get_gemini_response(prm,api_key = API_KEY):
     
@@ -133,5 +137,20 @@ def get_gemini_response(prm,api_key = API_KEY):
         return response["candidates"][0]["content"]["parts"][0]["text"]
     except (KeyError, IndexError, TypeError):
         return "No valid response"
+
+import requests
+
+def search_unsplash(text, per_page=10):
+    key = 'nKnKTDLfF-u8ty8Dvdqqkpg1TIYjQBxp91oG08Cel_k'
+    url = f"https://api.unsplash.com/search/photos?page=1&query={text}&client_id={key}&per_page={per_page}"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        return [(photo['urls']['regular'], photo.get('alt_description', 'No description available')) for photo in data['results']]
+    else:
+        return f"Error: {response.status_code}, {response.json()}"
+
+
 
 

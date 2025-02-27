@@ -6,26 +6,27 @@ from flask import (
 from werkzeug import exceptions
 
 from server.db import get_db
-from server.tools import get_aip_response, string_make_for_sql, check_if_word_exists, string_make_for_list, get_suggests, str_json
+from server.tools import get_aip_response,  check_if_word_exists, string_make_for_list, str_json
 
 word = Blueprint('word', __name__, url_prefix='/word')
 
 @word.route('/search/<word>')
 def search_word(word):
-    from flask import jsonify
-    db = get_db()
+        from flask import jsonify
+        db = get_db()
+        new_word = get_aip_response(word)
     
-    if check_if_word_exists(word):  # Global check if the word exists
+    # if check_if_word_exists(word):  # Global check if the word exists
         word_check = db.execute('SELECT * FROM Word WHERE word = ?', (word,)).fetchone()  # Local check in our database
         if not word_check:
             # Fetch word data from AI
-            new_word = get_aip_response(word)
+            
 #             # ADDING NEW WORD 
-            db.execute('INSERT INTO Word (word) VALUES (?)', (word, ))
+            db.execute('INSERT INTO Word (word, uzbek_translation) VALUES (?, ?)', (word, new_word['uzbek_translation']))
 
             # get word that has just been added
             new_added_word = db.execute('SELECT * FROM Word WHERE word = ?', (word, )).fetchone()
-
+            
 
             for defintion in new_word['definitions']:
                 db.execute('INSERT INTO Definition (word_id, definition) VALUES (?, ?)', (new_added_word['id'], defintion))
@@ -45,6 +46,9 @@ def search_word(word):
             for phonetic in new_word['phonetics']:
                 db.execute('INSERT INTO Phonetics (word_id, phonetic) VALUES (?, ?)', (new_added_word['id'], phonetic))
 
+            for paronym in new_word['paronyms']:
+                db.execute('INSERT INTO Example (word_id, paronym) VALUES (?, ?)', (new_added_word['id'], paronym))
+            
 
 
             db.commit()
@@ -52,22 +56,31 @@ def search_word(word):
         # Retrieve and return word details
         nothing = db.execute('SELECT * FROM Word WHERE word = ?', (word, )).fetchone()
         word_details = {
+    'paronyms': [row[0] for row in db.execute('SELECT paronym FROM Paronyms WHERE word_id = ?', (nothing['id'],)).fetchall()],
     'definitions': [row[0] for row in db.execute('SELECT definition FROM Definition WHERE word_id = ?', (nothing['id'],)).fetchall()],
     'synonyms': [row[0] for row in db.execute('SELECT synonym FROM Synonym WHERE word_id = ?', (nothing['id'],)).fetchall()],
     'antonyms': [row[0] for row in db.execute('SELECT antonym FROM Antonym WHERE word_id = ?', (nothing['id'],)).fetchall()],
     'examples': [row[0] for row in db.execute('SELECT example FROM Example WHERE word_id = ?', (nothing['id'],)).fetchall()],
     'phonetics': [row[0] for row in db.execute('SELECT phonetic FROM Phonetics WHERE word_id = ?', (nothing['id'],)).fetchall()],
-    'definitions_uz': [row[0] for row in db.execute('SELECT definition FROM Definition_uz WHERE word_id = ?', (nothing['id'],)).fetchall()]
+    'definitions_uz': [row[0] for row in db.execute('SELECT definition FROM Definition_uz WHERE word_id = ?', (nothing['id'],)).fetchall()],
+    'uzbek_translation':nothing['uzbek_translation']
 }
         print(word_details)
+        
+        if g.history_wordlist:
+            if not db.execute('SELECT * FROM wordlist_word WHERE word_id = ? AND wordlist_id = ?', (nothing['id'], g.history_wordlist['id'])).fetchone():
+                db.execute('INSERT INTO wordlist_word (word_id, wordlist_id) VALUES (?, ?)', (nothing['id'], g.history_wordlist['id']))
+                db.commit()
+        # print(word_details)
         # return {'fuck':word_details}
 
-        
+        from .tools import search_unsplash
 
-        return render_template('word_page.html', word = word, word_details = word_details)
+
+        return render_template('word_page.html', word = word, word_details = word_details, image = search_unsplash(word))
         # return new_word
-    else:
-        return {'code':get_suggests(word)}
+    # else:
+    #     return {'code':get_suggests(word)}
 
 
 
@@ -103,11 +116,21 @@ def wordlist_view(id):
     db = get_db()
     if db.execute('SELECT * FROM Wordlist WHERE id = ?', (id,)).fetchone()['owner_id'] == session.get('user_id'):
 
-    
+        
         wordlist = db.execute('SELECT * FROM Wordlist WHERE id = ?', (id,)).fetchone()
+    
+        word_ids = db.execute('SELECT * FROM wordlist_word WHERE wordlist_id = ?', (id, )).fetchall()
+        items = []
+        for item in word_ids:
+            
+            test = db.execute('SELECT * FROM Word WHERE id = ? ', (item['word_id'], )).fetchone()
+
+            if test:
+                items.append(test)
+
 
         if wordlist:
-            return render_template('wordlist_view.html', wordlist = wordlist)
+            return render_template('wordlist_view.html', wordlist = wordlist, items = items[::-1])
         else:
             return exceptions.NotFound('MAVJUD EMAS')
     
@@ -122,3 +145,18 @@ def my_wordlists():
         user_wordlists = get_db().execute('SELECT * FROM Wordlist WHERE owner_id = ?', (session.get('user_id'),))
         return render_template('my_wordlists.html', user_wordlists = user_wordlists)
     return redirect(url_for('auth.login'))
+
+from flask import jsonify
+
+@word.route('/delete/<int:id>')
+def delete_wordlist(id):
+        db = get_db()
+    # if request.method == 'POST':
+        check_if_wordlist = db.execute('SELECT * FROM Wordlist WHERE id = ?', (id,)).fetchone()
+        
+        if check_if_wordlist:
+            db.execute('DELETE FROM Wordlist WHERE id = ?', (id,))
+            db.commit()
+            return redirect(url_for('word.my_wordlists'))
+        else:
+            return jsonify({"success": False, "message": "Wordlist not found."}), 404
