@@ -1,6 +1,179 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@300;400&display=swap');
+
+    .main_word_page {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    .searched_word {
+        color: #2c3e50;
+        font-weight: 700;
+        text-transform: capitalize;
+        background: rgba(241, 241, 241, 0.8);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        display: inline-block;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.75rem;
+    }
+
+    audio {
+        width: 100%;
+        max-width: 300px;
+        height: 40px;
+        border-radius: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+        border: none;
+        transition: all 0.3s ease;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+    }
+
+    img {
+        transition: transform 0.3s ease;
+    }
+
+    img:hover {
+        transform: scale(1.05);
+    }
+
+    .pronounce {
+        font-style: italic;
+        color: #7f8c8d;
+        background: #ecf0f1;
+        padding: 0.25rem 0.75rem;
+        border-radius: 5px;
+        margin-right: 0.5rem;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 300;
+    }
+
+    h3 {
+        color: #34495e;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 0.25rem;
+        margin-bottom: 1rem;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    ul li {
+        background: white;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        border-radius: 5px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 400;
+        font-size: 1rem;
+    }
+
+    ul li:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .word-relations-table {
+        width: 100%;
+        background: white;
+        border-radius: 5px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        font-family: 'Roboto', sans-serif;
+        font-size: 1rem;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .word-relations-table th {
+        background: #f1f3f5;
+        color: #34495e;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        padding: 0.75rem;
+        text-align: left;
+    }
+
+    .word-relations-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #eee;
+        transition: all 0.2s ease;
+    }
+
+    .word-relations-table tr:hover td {
+        background: #f8f9fa;
+        transform: translateX(5px);
+    }
+
+    .word-relations-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .examples-container {
+        max-height: 200px; /* Fixed height for consistency */
+        overflow-y: auto; /* Scrollable when content exceeds height */
+        background: white;
+        border-radius: 5px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        padding: 0.5rem;
+    }
+
+    .examples-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .examples-container::-webkit-scrollbar-thumb {
+        background: #3498db;
+        border-radius: 4px;
+    }
+
+    .examples-container::-webkit-scrollbar-track {
+        background: #f1f3f5;
+        border-radius: 4px;
+    }
+
+    a {
+        color: #e74c3c;
+        text-decoration: none;
+        font-weight: 500;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    a:hover {
+        color: #c0392b;
+        text-decoration: underline;
+    }
+
+    hr {
+        border: 0;
+        height: 1px;
+        background: linear-gradient(to right, transparent, #3498db, transparent);
+    }
+
+    p {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 300;
+        font-size: 0.95rem;
+    }
+</style>
+
 <div class="main_word_page container py-4">
     <div class="row g-4">
         <div class="col-12 col-md-6">
@@ -11,7 +184,7 @@
                 <div class="col-12">
                     <div class="row align-items-center g-2">
                         <div class="col-12 col-sm-6">
-                            <audio controls class="w-100">
+                            <audio controls>
                                 <source src="{{ audio_url }}" type="audio/mpeg">
                                 Your browser does not support the audio element.
                             </audio>
@@ -57,7 +230,7 @@
                 <h3>Definitions</h3>
                 <ul class="list-unstyled">
                     {% for item in word_details['definitions'] %}
-                        <li class="mb-2">{{ item }}</li>
+                        <li>{{ item }}</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -65,7 +238,7 @@
                 <h3>Translated definitions</h3>
                 <ul class="list-unstyled">
                     {% for item in word_details['definitions_uz'] %}
-                        <li class="mb-2">{{ item }}</li>
+                        <li>{{ item }}</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -73,44 +246,46 @@
     </div>
 
     <div class="row g-4 mt-3">
-        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-            <div class="synonyms">
-                <h3>Synonyms</h3>
-                <ul class="list-unstyled">
-                    {% for item in word_details['synonyms'] %}
-                        <li class="mb-2"><a href="{{ url_for('word.search_word', word=item) }}">{{ item }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
+        <div class="col-12">
+            <h3>Word Relations</h3>
+            <table class="word-relations-table">
+                <tr>
+                    <th>Synonyms</th>
+                    <th>Antonyms</th>
+                    <th>Paronyms</th>
+                </tr>
+                {% set max_length = [word_details['synonyms']|length, word_details['antonyms']|length, word_details['paronyms']|length]|max %}
+                {% for i in range(max_length) %}
+                    <tr>
+                        <td>
+                            {% if i < word_details['synonyms']|length %}
+                                <a href="{{ url_for('word.search_word', word=word_details['synonyms'][i]) }}">{{ word_details['synonyms'][i] }}</a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if i < word_details['antonyms']|length %}
+                                <a href="{{ url_for('word.search_word', word=word_details['antonyms'][i]) }}">{{ word_details['antonyms'][i] }}</a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if i < word_details['paronyms']|length %}
+                                <a href="{{ url_for('word.search_word', word=word_details['paronyms'][i]) }}">{{ word_details['paronyms'][i] }}</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
         </div>
-        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-            <div class="antonyms">
-                <h3>Antonyms</h3>
-                <ul class="list-unstyled">
-                    {% for item in word_details['antonyms'] %}
-                        <li class="mb-2"><a href="{{ url_for('word.search_word', word=item) }}">{{ item }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-            <div class="paronyms">
-                <h3>Paronyms</h3>
-                <ul class="list-unstyled">
-                    {% for item in word_details['paronyms'] %}
-                        <li class="mb-2"><a href="{{ url_for('word.search_word', word=item) }}">{{ item }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        <div class="col-12 col-sm-6 col-md-12 col-lg-6">
+        <div class="col-12">
             <div class="examples">
                 <h3>Examples</h3>
-                <ul class="list-unstyled">
-                    {% for item in word_details['examples'] %}
-                        <li class="mb-2">{{ item }}</li>
-                    {% endfor %}
-                </ul>
+                <div class="examples-container">
+                    <ul class="list-unstyled m-0">
+                        {% for item in word_details['examples'] %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

@@ -1,20 +1,21 @@
 {% extends 'base.html' %}
+
+
 {% block content %}
-<div class="main-content d-flex align-items-center justify-content-center text-center" style="min-height: 60vh;">
+<div class="main-content d-flex align-items-center justify-content-center text-center">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <form method="post">
-                {% if g.user %}
-                <h2 class="fw-bold mb-4">Hey {{ g.user['first_name'] }}, are you ready to discover new knowledge today?</h2>
-                
-                {% else %}
-                <h2 class="fw-bold mb-4">A new word is a new world. Start exploring!</h2>
-                {% endif %}
-                <p class="lead text-muted mb-4">{{ g.home_page_quote() }}</p>
+                    {% if g.user %}
+                        <h2 class="mb-4">Hey {{ g.user['first_name'] }}, are you ready to discover new knowledge today?</h2>
+                    {% else %}
+                        <h2 class="mb-4">A new word is a new world. Start exploring!</h2>
+                    {% endif %}
+                    <p class="lead mb-4">{{ g.home_page_quote() }}</p>
                     <div class="input-group mb-3">
-                    <input type="text" class="form-control" placeholder="find a word ..." name="searched_word">
-                    <button class="btn text-white" type="button" style="background-color:#1d2a57;">Search</button>
+                        <input type="text" class="form-control" placeholder="Find a word..." name="searched_word">
+                        <button class="btn btn-search text-white" type="submit">Search</button>
                     </div>
                 </form>
             </div>
