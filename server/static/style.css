@@ -211,7 +211,12 @@
     font-weight: 400;
     font-size: 1rem;
 }
-
+.word-class {
+    color: #3498db;
+    font-style: italic;
+    font-weight: 300;
+    margin-left: 0.5rem;
+}
 .text-center a {
     color: #e74c3c;
     font-weight: 500;

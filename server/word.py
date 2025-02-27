@@ -14,6 +14,7 @@ from weasyprint import HTML
 word = Blueprint('word', __name__, url_prefix='/word')
 
 @word.route('/search/<word>')
+@word.route('/search/<word>')
 def search_word(word):
     db = get_db()
     
@@ -62,7 +63,8 @@ def search_word(word):
         'definitions': [row[0] for row in db.execute('SELECT definition FROM Definition WHERE word_id = ?', (word_id,)).fetchall()],
         'synonyms': [row[0] for row in db.execute('SELECT synonym FROM Synonym WHERE word_id = ?', (word_id,)).fetchall()],
         'antonyms': [row[0] for row in db.execute('SELECT antonym FROM Antonym WHERE word_id = ?', (word_id,)).fetchall()],
-        'examples': [row[0] for row in db.execute('SELECT example FROM Example WHERE word_id = ?', (word_id,)).fetchall()],
+        # Fetch both example and word_class as a dict
+        'examples': [{'sentence': row[0], 'word_class': row[1]} for row in db.execute('SELECT example, word_class FROM Example WHERE word_id = ?', (word_id,)).fetchall()],
         'phonetics': [row[0] for row in db.execute('SELECT phonetic FROM Phonetics WHERE word_id = ?', (word_id,)).fetchall()],
         'definitions_uz': [row[0] for row in db.execute('SELECT definition FROM Definition_uz WHERE word_id = ?', (word_id,)).fetchall()],
         'uzbek_translation': word_check['uzbek_translation']
@@ -76,13 +78,17 @@ def search_word(word):
                        (word_id, g.history_wordlist['id']))
             db.commit()
 
-
-    user_wordlists = get_db().execute('SELECT * FROM Wordlist WHERE owner_id = ?', (session.get('user_id'),)).fetchall()
+    user_wordlists = db.execute('SELECT * FROM Wordlist WHERE owner_id = ?', (session.get('user_id'),)).fetchall()
     
     # Render the word page
-    return render_template('word_page.html', word=word,word_id = word_id, word_details=word_details, image=search_unsplash(word), wordlists = user_wordlists, get_examples = get_examples, audio_url = get_audio_url(word))
-
-
+    return render_template('word_page.html', 
+                           word=word, 
+                           word_id=word_id, 
+                           word_details=word_details, 
+                           image=search_unsplash(word), 
+                           wordlists=user_wordlists, 
+                           get_examples=get_examples, 
+                           audio_url=get_audio_url(word))
 
 
 @word.route('wordlist/create', methods=['GET', 'POST'])

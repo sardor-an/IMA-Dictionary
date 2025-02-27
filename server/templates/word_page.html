@@ -282,7 +282,7 @@
                 <div class="examples-container">
                     <ul class="list-unstyled m-0">
                         {% for item in word_details['examples'] %}
-                            <li>{{ item }}</li>
+                            <li>{{ item['sentence'] }} <span class="word-class">({{ item['word_class'] }})</span></li>
                         {% endfor %}
                     </ul>
                 </div>
