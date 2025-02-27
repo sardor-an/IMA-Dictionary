@@ -3,17 +3,57 @@
 {% block content %}
 <div class="main_word_page">
     <h2 class="searched_word">{{ word }}</h2>
-    <span class="pronounce">US: {{ phonetics[0] }}</span>
-    <span class="pronounce">UK: {{ phonetics[1] }}</span>
+    <span class="pronounce">US: {{ word_details['phonetics'][0] }}</span>
+    <span class="pronounce">UK: {{ word_details['phonetics'][1] }}</span>
     <hr>
     <div class="definitions">
-        <ul class=>
-            {% for item in definitions %}
-            <li class="">{{ item }}</li>
+        <h3>Definitions</h3>
+        <ul>
+            {% for item in word_details['definitions'] %}
+                <li class="">{{ item }}</li>
             {% endfor %}
-            
-          </ul>          
+          </ul>
+          <h3>Translated definitions</h3>  
+          <ul>
+            {% for item in word_details['definitions_uz'] %}
+                <li class="">{{ item }}</li>
+            {% endfor %}
+          </ul>        
     </div>
+    <div class="row">
+        <div class="col col-6 col-sm-3">
+            <div class="synonyms">
+                <h3>Synonyms</h3>
+                <ul class=>
+                    {% for item in word_details['synonyms'] %}
+                        <li class="">{{ item }}</li>
+                    {% endfor %}
+                  </ul>  
+            </div>
+        </div>
+        <div class="col col-6 col-sm-3">
+            <div class="antonyms">
+                <h3>Antonyms</h3>
+                <ul class=>
+                    {% for item in word_details['antonyms'] %}
+                        <li class="">{{ item }}</li>
+                    {% endfor %}
+                  </ul>  
+            </div>
+        </div>
+        <div class="col col-12 col-sm-6 ">
+            <div class="examples">
+                <h3>Examples</h3>
+                <ul class=>
+                    {% for item in word_details['examples'] %}
+                        <li class="">{{ item }}</li>
+                    {% endfor %}
+                  </ul>  
+            </div>
+        </div>
+    </div>
+    
+    
 </div>
 
 {% endblock %}

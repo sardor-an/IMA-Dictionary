@@ -2,6 +2,8 @@ import requests
 import re
 import json
 from deep_translator import GoogleTranslator
+from .db import get_db
+import ast
 
 def home_page_quote():
     def extract_quotes(text):
@@ -9,14 +11,12 @@ def home_page_quote():
         return match.group(1).strip() if match else "Unlock the world, one word at a time."
 
     user_message = "I need 1 quote that changes all the time for the home page of my dictionary project, you can create it. Motive or meaning. So that I can easily distinguish them from your answer, write the quote inside the following characters: $%quo%$ your quote here $%quo%$, 1 is enough and length must be 35"
-    url = "https://gemini-6y6e.onrender.com/api/chat"
-    payload = {"message": user_message}
+   
+
+    res = get_gemini_response(user_message)
 
     try:
-        response = requests.post(url, json=payload, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        return extract_quotes(data.get("response", ""))
+        return extract_quotes(res)
     except requests.RequestException as e:
         print(f"Error fetching quote: {e}")
         return "Unlock the world, one word at a time."
@@ -27,7 +27,7 @@ def translate(text):
 
 # Extract data from API response
 def extract_data(response_text):
-    pattern = r"\?\?\?json_code_area_start\?\?\?\s*(\{.*?\})\s*\?\?\?json_code_area_end\?\?\?"
+    pattern = r"```json\s*({.*?})\s*```"# THERE SHOULD BE OTHER PATTERNS TO BE CONFIDENT
     match = re.search(pattern, response_text, re.DOTALL)
 
     if not match:
@@ -39,6 +39,7 @@ def extract_data(response_text):
         data = json.loads(json_block)  # Securely parse JSON
         return {
             "definitions": data.get("definitions", []),
+            "definitions_uz":data.get('definitions_uz', []),
             "synonyms": data.get("synonyms", []),
             "antonyms": data.get("antonyms", []),
             "phonetics": data.get("phonetics", []),
@@ -48,13 +49,13 @@ def extract_data(response_text):
         return {"error": f"JSON parsing failed: {e}"}
 
 def get_aip_response(user_message):
-    url = "https://gemini-6y6e.onrender.com/api/chat"
-    payload = {"message": f"""
-        I will give you 1 English word and you will give me its definition, synonyms, antonyms, phonetic (us and uk) and real example sentences to understand and use the word. Just use the pattern I gave so that I can easily extract them from your answer
+    prm = f"""
+        I will give you 1 English word and you will give me its definition, translation of definitions to uzbek, synonyms, antonyms, phonetic (us and uk) and real example sentences to understand and use the word. Just use the pattern I gave so that I can easily extract them from your answer
         You write the part of the answer I need in this pattern:
-        ???json_code_area_start???
+        ```json
         {{
             "definitions": ["definition1", "definition2", "definition3"],
+            "definitions_uz": ["definition_uz1", "definition_uz2", "definition_uz3"],
             "synonyms": ["synonym1", "synonym2", "synonym3"],
             "antonyms": ["antonym1", "antonym2", "antonym3"],
             "phonetics": ["phonetic of US", "phonetic of UK"],
@@ -63,21 +64,74 @@ def get_aip_response(user_message):
                 {{"sentence": "Example sentence 2", "word_class": "verb"}}
             ]
         }}
-        ???json_code_area_end???
+        ```
+               
         Let me explain more about what to write in Examples: in English, 1 word can have several meanings and come in different word classes. In one place as a noun, in another as a verb, etc. Here, the first element of the tuple is the adjective clause, and as the second element, write which word class the given word comes in.
         # Guideline
+        - Do not forget about adding uzbek translations of definitions
+        - Your response must look exactly like this JSON structure. Do NOT add extra fields or remove any
+        - No extra explanations. Only output the JSON structure.
+        - You MUST strictly follow the JSON pattern below. Do NOT modify the structure, order, or format of the response.
         - There should be at least 5 examples in each section (at least 5 definitions, at least 5 synonyms, and so on for all.But only examples must be more than 15 in many different cases)
         - REMEMBER I said at least 5, I didn't always say 5, it's okay if there are more.
         - Take examples from real situations and make sure they are understandable.
         So let's start!
         Given word: {user_message}
-    """}
+    """
 
+    return extract_data(get_gemini_response(prm))
+
+
+def string_make_for_sql(data: list, uz = False):
+    data_for_sql = ""
+    if uz:
+        for item in data:
+            data_for_sql += f'{translate(item)}'
+
+    else:
+        for item in data:
+            data_for_sql += f'{item};'
+
+    return data_for_sql
+
+def string_make_for_list(data: str):
+    return data.split(';')[:-1]
+
+def str_json(data):
+    return ast.literal_eval(f"[{re.findall(r"\{'sentence': '([^']+)', 'word_class': '([^']+)'\}", data)[0]}]")
+
+
+def check_if_word_exists(word):
+    db = get_db().execute("SELECT EXISTS(SELECT 1 FROM Saved_word WHERE word = ?)", (word,)).fetchone()[0]
+    return bool(db)
+
+def get_suggests(word):
+    from rapidfuzz import process
+    def suggest_similar(word, num_suggestions=5):
+        db = get_db()
+        cursor = db.execute("SELECT word FROM Saved_Word")
+        all_words = [row[0] for row in cursor.fetchall()]
+        matches = process.extract(word, all_words, limit=num_suggestions, score_cutoff=80)
+        return [match[0] for match in matches] or "Nothing"
+
+    return suggest_similar(word, 10)
+API_KEY = "AIzaSyBEAU0Np4eVQwyy_HV08gerXQ7slfKKKzw"
+def get_gemini_response(prm,api_key = API_KEY):
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "contents": [{
+            "parts": [{"text": prm}]
+        }]
+    }
+
+    response = requests.post(url, json=data, headers=headers).json()
+
+    # Extract only the response text
     try:
-        response = requests.post(url, json=payload, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        return extract_data(data.get("response"))
-        # return data.get("response")
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Request failed: {e}"}
+        return response["candidates"][0]["content"]["parts"][0]["text"]
+    except (KeyError, IndexError, TypeError):
+        return "No valid response"
+
+

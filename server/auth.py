@@ -38,6 +38,9 @@ def register():
             "INSERT INTO user (first_name, last_name, email, password) VALUES (?, ?, ?, ?)",
             (first_name, last_name, email, generate_password_hash(password)),
         )
+        just_registered_user = db.execute('SELECT * FROM User WHERE email = ?', (email, )).fetchone()
+
+        db.execute('INSERT INTO Wordlist (title, owner_id) VALUES (?, ?)', ('History', just_registered_user['id']))
         db.commit()
 
         print("SUCCESS: Registration successful! You can now log in.")  # Print success message
@@ -88,6 +91,8 @@ def load_logged_in_user():
         g.user = get_db().execute(
             'SELECT * FROM user WHERE id = ?', (user_id,)
         ).fetchone()
+        g.history_wordlist = get_db().execute("SELECT * FROM Wordlist WHERE owner_id = ? AND title = ?", (session.get('user_id',), 'History')).fetchone()
+
 
 @auth.route('/logout')
 def logout():

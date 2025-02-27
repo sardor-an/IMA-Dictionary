@@ -1,7 +1,9 @@
 import os
 
-from flask import Flask, render_template, request, g, redirect, url_for
+from flask import Flask, render_template, request, g, redirect, url_for, session
 from .tools import home_page_quote, translate
+from .auth import login_required
+from .db import get_db
 
 def create_app():
     # create and configure the app
@@ -9,8 +11,7 @@ def create_app():
     app.config.from_mapping(
         SECRET_KEY='123ajsoidu932ejikadk3a',
         DATABASE=os.path.join(app.instance_path, 'server.sqlite'),
-    )
-
+        )
     from . import db
     db.init_app(app)
     # ensure the instance folder exists
@@ -31,9 +32,11 @@ def create_app():
 
     # home page
     @app.route('/', methods = ['GET', 'POST'])
+    @login_required
     def home():
         g.home_page_quote = home_page_quote
         g.translate = translate
+       
         
         if request.method == "POST":
             searched_word = request.form.get("searched_word")
