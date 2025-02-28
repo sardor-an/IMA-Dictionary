@@ -101,8 +101,6 @@ def string_make_for_sql(data: list, uz = False):
 def string_make_for_list(data: str):
     return data.split(';')[:-1]
 
-def str_json(data):
-    return ast.literal_eval(f"[{re.findall(r"\{'sentence': '([^']+)', 'word_class': '([^']+)'\}", data)[0]}]")
 
 
 def check_if_word_exists(word):
