@@ -6,7 +6,7 @@ app = create_app()
 #     init_db()
 if __name__ == '__main__':
     try:
-        app.run(port=9000, debug=True, host='127.0.0.1')
+        app.run(port=8000, debug=True, host='127.0.0.1')
     except Exception as e:
         import logging
         logging.basicConfig(filename='critical_errors.log', level=logging.ERROR)
